@@ -10,7 +10,7 @@ body{margin:0;font-family:Segoe UI;background:#0d1b1e;color:#fff}
 h1{text-align:center;color:#ffd86a}
 .info,.controls{display:flex;gap:18px;justify-content:center;align-items:center;flex-wrap:wrap;margin:12px 0}
 .controls button{padding:10px 16px;border:none;border-radius:8px;background:#197c7b;color:#fff;cursor:pointer}
-.board{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.board{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
 .card{aspect-ratio:1;perspective:800px}
 .inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:.6s}
 .card.flip .inner{transform:rotateY(180deg)}
@@ -27,12 +27,12 @@ h1{text-align:center;color:#ffd86a}
 <div class="wrap">
 <h1>Juego de Memoria</h1>
 <div class="info">
-<div>Tiempo: <b id=t>01:30</b></div>
+<div>Tiempo: <b id=t>01:00</b></div>
 <div>Movimientos: <b id=m>0</b></div>
-<div>Parejas: <b id=p>0</b>/10</div>
+<div>Parejas: <b id=p>0</b>/12</div>
 </div>
 <div class="controls">
-<button id=start>Iniciar 1:30</button>
+<button id=start>Iniciar 1:00</button>
 <button id=show>Mostrar cartas</button>
 <button id=reset>Reiniciar tablero</button>
 </div>
@@ -49,17 +49,39 @@ const defs=[
 ["Nube",`<svg viewBox="0 0 100 100"><path d="M28 65h42c10 0 15-7 15-14S79 38 70 38c-3-10-11-16-21-16-11 0-20 7-22 18-8 1-14 8-14 17 0 5 5 8 15 8z" fill="#4dd0e1"/><path d="M50 30v30M42 52l8 8 8-8" stroke="#fff" stroke-width="4" fill="none"/></svg>`],
 ["API",`<svg viewBox="0 0 100 100"><rect x="18" y="35" width="24" height="30" fill="#ffd54f"/><rect x="58" y="35" width="24" height="30" fill="#ffd54f"/><path d="M42 50h16" stroke="#fff" stroke-width="5"/></svg>`],
 ["IA",`<svg viewBox="0 0 100 100"><rect x="30" y="30" width="40" height="40" rx="6" fill="#ba68c8"/><path d="M20 40h10M20 60h10M70 40h10M70 60h10M40 20v10M60 20v10M40 70v10M60 70v10" stroke="#ba68c8" stroke-width="4"/></svg>`],
-["Ciberseguridad",`<svg viewBox="0 0 100 100"><path d="M50 18 74 28v22c0 17-12 27-24 32-12-5-24-15-24-32V28z" fill="#26c6da"/><rect x="43" y="45" width="14" height="14" fill="#fff"/><path d="M46 45v-5a4 4 0 118 0v5" stroke="#fff" stroke-width="3" fill="none"/></svg>`]
+["Ciberseguridad",`<svg viewBox="0 0 100 100"><path d="M50 18 74 28v22c0 17-12 27-24 32-12-5-24-15-24-32V28z" fill="#26c6da"/><rect x="43" y="45" width="14" height="14" fill="#fff"/><path d="M46 45v-5a4 4 0 118 0v5" stroke="#fff" stroke-width="3" fill="none"/></svg>`],
+["Redes",`<svg viewBox="0 0 100 100"><circle cx="25" cy="50" r="6" fill="#64b5f6"/><circle cx="50" cy="25" r="6" fill="#64b5f6"/><circle cx="75" cy="50" r="6" fill="#64b5f6"/><circle cx="50" cy="75" r="6" fill="#64b5f6"/><path d="M25 50 50 25 75 50 50 75 25 50" stroke="#64b5f6" stroke-width="4" fill="none"/></svg>`],
+["Automatización",`<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="16" fill="#ffb74d"/><path d="M50 20v10M50 70v10M20 50h10M70 50h10M30 30l7 7M63 63l7 7M30 70l7-7M63 37l7-7" stroke="#ffb74d" stroke-width="4"/></svg>`]
 ];
-let data=[],a=null,b=null,lock=false,moves=0,pairs=0,time=90,intv=null,paused=true;
-const letters="ABCDEFGHIJKLMNOPQRST".split('');
+let data=[],a=null,b=null,lock=false,moves=0,pairs=0,time=60,intv=null,paused=true,gameStarted=false;
+const letters="ABCDEFGHIJKLMNOPQRSTUVWX".split('');
 function shuffle(x){for(let i=x.length-1;i>0;i--){let j=Math.random()*(i+1)|0;[x[i],x[j]]=[x[j],x[i]]}}
-function build(){data=[];defs.forEach((d,i)=>{data.push({id:i,...Object.fromEntries([["n",d[0]],["svg",d[1]]])});data.push({id:i,n:d[0],svg:d[1]})});shuffle(data);const b=document.getElementById('board');b.innerHTML='';data.forEach((c,i)=>{const div=document.createElement('div');div.className='card';div.dataset.i=i;div.innerHTML=`<div class=inner><div class="face back">${letters[i]}</div><div class="face front">${c.svg}<small>${c.n}</small></div></div>`;div.onclick=()=>flip(div);b.append(div)});}
+function build(){data=[];defs.forEach((d,i)=>{data.push({id:i,...Object.fromEntries([["n",d[0]],["svg",d[1]]])});data.push({id:i,n:d[0],svg:d[1]})});for(let k=0;k<6;k++)shuffle(data);const b=document.getElementById('board');b.innerHTML='';data.forEach((c,i)=>{const div=document.createElement('div');div.className='card';div.dataset.i=i;div.innerHTML=`<div class=inner><div class="face back">${letters[i]}</div><div class="face front">${c.svg}<small>${c.n}</small></div></div>`;div.onclick=()=>flip(div);b.append(div)});}
 function upd(){m.textContent=moves;p.textContent=pairs;let mm=("0"+(time/60|0)).slice(-2),ss=("0"+time%60).slice(-2);t.textContent=mm+":"+ss}
-function flip(el){if(lock||el.classList.contains('match')||el===a)return;el.classList.add('flip');if(!a){a=el;return}b=el;lock=true;moves++;upd();let ca=data[a.dataset.i],cb=data[b.dataset.i];if(ca.id==cb.id){a.classList.add('match');b.classList.add('match');a=b=null;lock=false;pairs++;upd();}else{a.classList.add('wrong');b.classList.add('wrong');setTimeout(()=>{a.classList.remove('wrong','flip');b.classList.remove('wrong','flip');a=b=null;lock=false;},3000)}}
-start.onclick=()=>{if(paused){paused=false;start.textContent="Pausar";intv=setInterval(()=>{if(time>0){time--;upd()}},1000)}else{paused=true;start.textContent="Iniciar 1:30";clearInterval(intv)}}
-show.onclick=()=>{if(lock)return;lock=true;document.querySelectorAll('.card').forEach(c=>c.classList.add('flip'));setTimeout(()=>{document.querySelectorAll('.card').forEach(c=>{if(!c.classList.contains('match'))c.classList.remove('flip')});lock=false},5000)}
-reset.onclick=()=>{clearInterval(intv);paused=true;start.textContent="Iniciar 1:30";time=90;moves=0;pairs=0;a=b=null;lock=false;upd();build()}
+function flip(el){if(!gameStarted||lock||el.classList.contains('match')||el===a)return;el.classList.add('flip');if(!a){a=el;return}b=el;lock=true;moves++;upd();let ca=data[a.dataset.i],cb=data[b.dataset.i];if(ca.id==cb.id){a.classList.add('match');b.classList.add('match');a=b=null;lock=false;pairs++;upd();}else{a.classList.add('wrong');b.classList.add('wrong');setTimeout(()=>{a.classList.remove('wrong','flip');b.classList.remove('wrong','flip');a=b=null;lock=false;},3000)}}
+start.onclick=()=>{
+if(paused){
+paused=false;
+gameStarted=true;
+start.textContent="Pausar";
+intv=setInterval(()=>{
+if(time>0){time--;upd();}
+else{
+clearInterval(intv);
+paused=true;
+lock=true;
+gameStarted=false;
+start.textContent="Iniciar 1:00";
+}
+},1000);
+}else{
+paused=true;
+clearInterval(intv);
+start.textContent="Iniciar 1:00";
+}
+}
+show.onclick=()=>{if(lock)return;lock=true;document.querySelectorAll('.card').forEach(c=>c.classList.add('flip'));setTimeout(()=>{document.querySelectorAll('.card').forEach(c=>{if(!c.classList.contains('match'))c.classList.remove('flip')});lock=false},3000)}
+reset.onclick=()=>{clearInterval(intv);paused=true;gameStarted=false;start.textContent="Iniciar 1:00";time=60;moves=0;pairs=0;a=b=null;lock=false;upd();build()}
 upd();build();
 </script>
 </body></html>
